@@ -2,6 +2,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChatInterface } from "@/components/ChatInterface";
 import { FAQSection } from "@/components/FAQSection";
+import { Dashboard } from "@/components/Dashboard";
 
 const Index = () => {
   return (
@@ -12,20 +13,24 @@ const Index = () => {
             CAPACITI AI Assistant
           </div>
           <h1 className="text-4xl font-bold text-capaciti-navy mb-4">
-            Welcome to CAPACITI Chat
+            Welcome to CAPACITI Dashboard
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Get instant answers about CAPACITI's programs, courses, and opportunities.
-            Our AI assistant is here to help you 24/7.
+            Access CAPACITI's programs, chat with our AI assistant, and explore opportunities
+            all in one place.
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto">
-          <Tabs defaultValue="chat" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8">
+        <div className="max-w-6xl mx-auto">
+          <Tabs defaultValue="dashboard" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-8">
+              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="chat">Chat Assistant</TabsTrigger>
               <TabsTrigger value="faq">FAQ</TabsTrigger>
             </TabsList>
+            <TabsContent value="dashboard" className="mt-0">
+              <Dashboard />
+            </TabsContent>
             <TabsContent value="chat" className="mt-0">
               <ChatInterface />
             </TabsContent>
