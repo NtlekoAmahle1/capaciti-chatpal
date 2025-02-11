@@ -17,18 +17,18 @@ export const ChatMessage = ({ message, isBot = false, avatar }: ChatMessageProps
     >
       <div
         className={cn(
-          "flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full bg-capaciti-navy text-white",
-          isBot ? "bg-capaciti-red" : "bg-capaciti-navy"
+          "flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full text-white font-semibold",
+          isBot ? "bg-capaciti-red shadow-md shadow-capaciti-red/20" : "bg-capaciti-navy shadow-md shadow-capaciti-navy/20"
         )}
       >
         {avatar || (isBot ? "AI" : "U")}
       </div>
       <div
         className={cn(
-          "rounded-lg px-4 py-3 max-w-[80%]",
+          "rounded-lg px-4 py-3 max-w-[80%] shadow-sm",
           isBot
-            ? "bg-white text-capaciti-navy shadow-sm"
-            : "bg-capaciti-navy text-white"
+            ? "bg-white text-capaciti-navy border border-capaciti-red/10"
+            : "bg-gradient-to-r from-capaciti-navy to-capaciti-navy-light text-white"
         )}
       >
         {message}
