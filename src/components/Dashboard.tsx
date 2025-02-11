@@ -1,7 +1,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Graduation, Users, Code, BookOpen } from "lucide-react";
+import { ArrowRight, GraduationCap, Users, Code, BookOpen } from "lucide-react";
 
 export const Dashboard = () => {
   const programs = [
@@ -14,7 +14,7 @@ export const Dashboard = () => {
     {
       title: "Career Development",
       description: "Build your career path with industry-relevant training",
-      icon: Graduation,
+      icon: GraduationCap,
       color: "text-capaciti-navy",
     },
     {
@@ -34,24 +34,24 @@ export const Dashboard = () => {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <div className="relative rounded-2xl bg-gradient-to-r from-capaciti-navy to-capaciti-navy-light p-8 text-white overflow-hidden">
+      <div className="relative rounded-2xl bg-gradient-to-r from-capaciti-red to-capaciti-navy p-8 text-white overflow-hidden">
         <div className="relative z-10 max-w-2xl">
           <h2 className="text-3xl font-bold mb-4">Transform Your Future with CAPACITI</h2>
           <p className="text-white/90 mb-6">
             Join our innovative training programs designed to empower individuals with digital skills
             and prepare them for careers in technology. Get started on your journey today!
           </p>
-          <Button className="bg-capaciti-red hover:bg-capaciti-red/90">
+          <Button className="bg-white text-capaciti-navy hover:bg-gray-100">
             Explore Programs <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
-        <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-capaciti-red/10 to-transparent" />
+        <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-capaciti-navy/50 to-transparent" />
       </div>
 
       {/* Programs Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {programs.map((program) => (
-          <Card key={program.title} className="p-6 hover:shadow-lg transition-shadow">
+          <Card key={program.title} className="p-6 hover:shadow-lg transition-shadow bg-white/95">
             <div className="flex items-start space-x-4">
               <div className={`${program.color} p-3 rounded-lg bg-gray-100`}>
                 <program.icon className="h-6 w-6" />
@@ -67,15 +67,15 @@ export const Dashboard = () => {
 
       {/* Features Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6 border-l-4 border-l-capaciti-red">
+        <Card className="p-6 border-l-4 border-l-capaciti-red bg-white/95">
           <h3 className="font-semibold text-capaciti-navy mb-2">Industry-Led Training</h3>
           <p className="text-gray-600">Programs designed with input from industry leaders</p>
         </Card>
-        <Card className="p-6 border-l-4 border-l-capaciti-navy">
+        <Card className="p-6 border-l-4 border-l-capaciti-navy bg-white/95">
           <h3 className="font-semibold text-capaciti-navy mb-2">Career Support</h3>
           <p className="text-gray-600">Dedicated career guidance and placement assistance</p>
         </Card>
-        <Card className="p-6 border-l-4 border-l-capaciti-red">
+        <Card className="p-6 border-l-4 border-l-capaciti-red bg-white/95">
           <h3 className="font-semibold text-capaciti-navy mb-2">Flexible Learning</h3>
           <p className="text-gray-600">Learn at your own pace with structured support</p>
         </Card>
