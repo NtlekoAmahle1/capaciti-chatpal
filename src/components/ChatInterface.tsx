@@ -2,37 +2,79 @@
 import { useState } from "react";
 import { ChatInput } from "./ChatInput";
 import { ChatMessage } from "./ChatMessage";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Message {
   text: string;
   isBot: boolean;
 }
 
+const SYSTEM_PROMPT = `You are CAPACITI's AI Assistant. CAPACITI is a leading digital skills training provider in Africa. 
+Here are key details about CAPACITI:
+- Offers programs in Digital Skills, Career Development, and Business Skills
+- Provides industry-led training with real-world projects
+- Focuses on practical, hands-on learning experiences
+- Offers career support and placement assistance
+- Has flexible learning options
+- Main website: https://uvuafrica.com/capaciti/
+
+Please provide helpful, accurate information about CAPACITI's programs and services. Be professional but friendly.`;
+
 export const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
-      text: "Hello! I'm the CAPACITI AI Assistant. How can I help you today?",
+      text: "Hello! I'm the CAPACITI AI Assistant. How can I help you learn more about our programs?",
       isBot: true,
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleSendMessage = async (message: string) => {
-    // Add user message
-    setMessages((prev) => [...prev, { text: message, isBot: false }]);
-    setIsLoading(true);
+    try {
+      // Add user message
+      setMessages((prev) => [...prev, { text: message, isBot: false }]);
+      setIsLoading(true);
 
-    // Simulate AI response (replace with actual AI integration)
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          text: "Thank you for your message. I'm a demo version, but I'll be fully functional soon!",
-          isBot: true,
+      // Prepare conversation history
+      const conversationHistory = messages.map(msg => ({
+        role: msg.isBot ? "assistant" : "user",
+        content: msg.text
+      }));
+
+      // Make API call to Supabase Edge Function
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      ]);
+        body: JSON.stringify({
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            ...conversationHistory,
+            { role: "user", content: message }
+          ]
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+
+      const data = await response.json();
+      
+      // Add AI response
+      setMessages((prev) => [...prev, { text: data.reply, isBot: true }]);
+    } catch (error) {
+      console.error('Error in chat:', error);
+      toast({
+        title: "Error",
+        description: "Failed to get response. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
