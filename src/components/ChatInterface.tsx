@@ -22,6 +22,13 @@ Here are key details about CAPACITI:
 
 Please provide helpful, accurate information about CAPACITI's programs and services. Be professional but friendly.`;
 
+// Get the Supabase URL from environment
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+if (!SUPABASE_URL) {
+  console.error('VITE_SUPABASE_URL environment variable is not set');
+}
+
 export const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -83,6 +90,15 @@ export const ChatInterface = () => {
   };
 
   const handleSendMessage = async (message: string) => {
+    if (!SUPABASE_URL) {
+      toast({
+        title: "Configuration Error",
+        description: "The application is not properly configured. Please contact support.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setMessages((prev) => [...prev, { text: message, isBot: false }]);
       setIsLoading(true);
@@ -92,10 +108,6 @@ export const ChatInterface = () => {
         content: msg.text
       }));
 
-      // Get the Supabase URL from environment or configuration
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-      
-      // Call the Supabase Edge Function
       const response = await fetch(`${SUPABASE_URL}/functions/v1/chat`, {
         method: 'POST',
         headers: {
