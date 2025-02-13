@@ -1,50 +1,15 @@
-import { useState, useRef } from "react";
+
+import { useState, useRef, useEffect } from "react";
 import { ChatInput } from "./ChatInput";
 import { ChatMessage } from "./ChatMessage";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 
 interface Message {
   text: string;
   isBot: boolean;
 }
-
-const SYSTEM_PROMPT = `You are AskCapa, CAPACITI's AI Assistant. CAPACITI is a leading digital skills training provider in Africa. 
-Here are key details about CAPACITI:
-
-Programs:
-1. Digital Skills:
-   - Web Development (HTML, CSS, JavaScript, React)
-   - Data Analytics
-   - UX/UI Design
-   - Digital Marketing
-
-2. Career Development:
-   - Professional Communication
-   - Interview Preparation
-   - CV Writing
-   - Personal Branding
-
-3. Business Skills:
-   - Project Management
-   - Business Analysis
-   - Agile Methodologies
-   - Leadership Development
-
-Key Features:
-- Industry-led training with real-world projects
-- Practical, hands-on learning experiences
-- Career support and placement assistance
-- Flexible learning options
-- Expert mentorship
-- Industry-recognized certifications
-
-Locations: Available across Africa with a focus on South Africa
-Website: https://uvuafrica.com/capaciti/
-Contact: Visit https://uvuafrica.com/capaciti/ for contact information
-
-Please provide helpful, accurate information about CAPACITI's programs and services. Be professional but friendly. When asked about specific programs, include details about curriculum, duration, and career prospects.`;
 
 // Get the Supabase URL from environment
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -62,6 +27,7 @@ export const ChatInterface = () => {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isSpeechEnabled, setIsSpeechEnabled] = useState(true);
   const { toast } = useToast();
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
@@ -96,6 +62,10 @@ export const ChatInterface = () => {
 
       recognitionRef.current.start();
       setIsListening(true);
+      toast({
+        title: "Listening",
+        description: "Speak now...",
+      });
     } catch (error) {
       console.error('Speech recognition not supported:', error);
       toast({
@@ -111,6 +81,10 @@ export const ChatInterface = () => {
       recognitionRef.current.stop();
       setIsListening(false);
     }
+  };
+
+  const toggleSpeech = () => {
+    setIsSpeechEnabled(!isSpeechEnabled);
   };
 
   const handleSendMessage = async (message: string) => {
@@ -139,7 +113,6 @@ export const ChatInterface = () => {
         },
         body: JSON.stringify({
           messages: [
-            { role: "system", content: SYSTEM_PROMPT },
             ...conversationHistory,
             { role: "user", content: message }
           ]
@@ -155,8 +128,12 @@ export const ChatInterface = () => {
       setMessages((prev) => [...prev, { text: data.reply, isBot: true }]);
 
       // Text-to-speech for bot responses
-      const speech = new SpeechSynthesisUtterance(data.reply);
-      window.speechSynthesis.speak(speech);
+      if (isSpeechEnabled) {
+        const speech = new SpeechSynthesisUtterance(data.reply);
+        speech.rate = 0.9; // Slightly slower for better clarity
+        speech.pitch = 1;
+        window.speechSynthesis.speak(speech);
+      }
     } catch (error) {
       console.error('Error in chat:', error);
       toast({
@@ -169,18 +146,41 @@ export const ChatInterface = () => {
     }
   };
 
+  // Cleanup speech synthesis when component unmounts
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis.cancel();
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
   return (
     <div className="flex flex-col h-[600px] bg-gradient-to-br from-white to-capaciti-red/5 rounded-lg shadow-lg overflow-hidden border border-capaciti-navy/10">
       <div className="bg-capaciti-navy text-white px-4 py-3 flex justify-between items-center">
         <h2 className="text-lg font-semibold">AskCapa</h2>
-        <Button
-          size="sm"
-          variant="ghost"
-          className={`hover:bg-white/20 ${isListening ? 'text-capaciti-red' : 'text-white'}`}
-          onClick={isListening ? stopListening : startListening}
-        >
-          {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="hover:bg-white/20"
+            onClick={toggleSpeech}
+          >
+            {isSpeechEnabled ? 
+              <Volume2 className="h-4 w-4" /> : 
+              <VolumeX className="h-4 w-4" />
+            }
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className={`hover:bg-white/20 ${isListening ? 'text-capaciti-red' : 'text-white'}`}
+            onClick={isListening ? stopListening : startListening}
+          >
+            {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          </Button>
+        </div>
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message, index) => (
