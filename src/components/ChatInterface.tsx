@@ -92,7 +92,11 @@ export const ChatInterface = () => {
         content: msg.text
       }));
 
-      const response = await fetch('/api/chat', {
+      // Get the Supabase URL from environment or configuration
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      
+      // Call the Supabase Edge Function
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
