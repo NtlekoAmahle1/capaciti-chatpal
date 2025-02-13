@@ -2,20 +2,14 @@
 import { useState, useRef, useEffect } from "react";
 import { ChatInput } from "./ChatInput";
 import { ChatMessage } from "./ChatMessage";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Volume2, VolumeX } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 interface Message {
   text: string;
   isBot: boolean;
-}
-
-// Get the Supabase URL from environment
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-
-if (!SUPABASE_URL) {
-  console.error('VITE_SUPABASE_URL environment variable is not set');
 }
 
 export const ChatInterface = () => {
@@ -88,15 +82,6 @@ export const ChatInterface = () => {
   };
 
   const handleSendMessage = async (message: string) => {
-    if (!SUPABASE_URL) {
-      toast({
-        title: "Configuration Error",
-        description: "The application is not properly configured. Please contact support.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       setMessages((prev) => [...prev, { text: message, isBot: false }]);
       setIsLoading(true);
@@ -106,10 +91,11 @@ export const ChatInterface = () => {
         content: msg.text
       }));
 
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/chat`, {
+      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabase.supabaseKey}`,
         },
         body: JSON.stringify({
           messages: [
