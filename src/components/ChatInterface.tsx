@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { ChatInput } from "./ChatInput";
 import { ChatMessage } from "./ChatMessage";
@@ -91,34 +90,29 @@ export const ChatInterface = () => {
         content: msg.text
       }));
 
-      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.supabaseKey}`,
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('chat', {
+        body: {
           messages: [
             ...conversationHistory,
             { role: "user", content: message }
           ]
-        }),
+        }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
+      if (error) throw error;
 
-      const data = await response.json();
-      
-      setMessages((prev) => [...prev, { text: data.reply, isBot: true }]);
+      if (data?.reply) {
+        setMessages((prev) => [...prev, { text: data.reply, isBot: true }]);
 
-      // Text-to-speech for bot responses
-      if (isSpeechEnabled) {
-        const speech = new SpeechSynthesisUtterance(data.reply);
-        speech.rate = 0.9; // Slightly slower for better clarity
-        speech.pitch = 1;
-        window.speechSynthesis.speak(speech);
+        // Text-to-speech for bot responses
+        if (isSpeechEnabled) {
+          const speech = new SpeechSynthesisUtterance(data.reply);
+          speech.rate = 0.9; // Slightly slower for better clarity
+          speech.pitch = 1;
+          window.speechSynthesis.speak(speech);
+        }
+      } else {
+        throw new Error('No response received from the chatbot');
       }
     } catch (error) {
       console.error('Error in chat:', error);
@@ -132,7 +126,6 @@ export const ChatInterface = () => {
     }
   };
 
-  // Cleanup speech synthesis when component unmounts
   useEffect(() => {
     return () => {
       window.speechSynthesis.cancel();

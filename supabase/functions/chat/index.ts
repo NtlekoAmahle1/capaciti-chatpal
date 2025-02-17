@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const SYSTEM_PROMPT = `You are AskCapa, CAPACITI's AI Assistant. Please provide accurate, helpful information about CAPACITI's programs and services.
+const SYSTEM_PROMPT = `You are AskCapa, CAPACITI's AI Assistant. Provide accurate information about CAPACITI's programs and services.
 
 Key Information about CAPACITI:
 
@@ -36,23 +36,10 @@ Programs:
    - SEO & Analytics
    - Duration: 3-4 months
 
-Additional Services:
-- Career Guidance & Placement
-- Industry Mentorship
-- Project-Based Learning
-- Professional Development Workshops
-
-Benefits:
-- Industry-Led Training
-- Hands-On Experience
-- Career Support
-- Flexible Learning Options
-- Recognized Certifications
-
-Be friendly but professional, and provide specific, accurate details about programs when asked.
-If asked about something you're not certain about, admit that and suggest contacting CAPACITI directly through their website.`
+Be friendly but professional, and provide specific, accurate details about programs when asked.`
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -93,7 +80,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error:', error)
     return new Response(
-      JSON.stringify({ error: 'Failed to process request' }),
+      JSON.stringify({ error: error.message }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
