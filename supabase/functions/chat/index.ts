@@ -39,13 +39,20 @@ Programs:
 Be friendly but professional, and provide specific, accurate details about programs when asked.`
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
+    if (!Deno.env.get('OPENAI_API_KEY')) {
+      throw new Error('OPENAI_API_KEY is not set');
+    }
+
     const { messages } = await req.json()
+
+    if (!Array.isArray(messages)) {
+      throw new Error('Invalid messages format');
+    }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -54,7 +61,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4', // Fixed model name
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           ...messages
@@ -65,7 +72,9 @@ serve(async (req) => {
     })
 
     if (!response.ok) {
-      throw new Error('OpenAI API call failed')
+      const error = await response.json();
+      console.error('OpenAI API error:', error);
+      throw new Error(error.error?.message || 'OpenAI API call failed');
     }
 
     const data = await response.json()
@@ -80,7 +89,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: 'If this error persists, please ensure the Edge Function is properly deployed and the OpenAI API key is set.'
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
