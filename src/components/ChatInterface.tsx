@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { ChatInput } from "./ChatInput";
 import { ChatMessage } from "./ChatMessage";
@@ -85,29 +86,32 @@ export const ChatInterface = () => {
       setMessages((prev) => [...prev, { text: message, isBot: false }]);
       setIsLoading(true);
 
-      const conversationHistory = messages.map(msg => ({
-        role: msg.isBot ? "assistant" : "user",
-        content: msg.text
-      }));
+      // Add debug logging
+      console.log("Sending message to Supabase function:", message);
 
-      const { data, error } = await supabase.functions.invoke('chat', {
-        body: {
-          messages: [
-            ...conversationHistory,
-            { role: "user", content: message }
-          ]
-        }
-      });
+      // Send message to Supabase function with explicit timeout
+      const { data, error } = await Promise.race([
+        supabase.functions.invoke('chat', {
+          body: { message },
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Request timeout')), 10000)
+        )
+      ]) as any;
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase function error:", error);
+        throw error;
+      }
+
+      console.log("Received response from Supabase function:", data);
 
       if (data?.reply) {
         setMessages((prev) => [...prev, { text: data.reply, isBot: true }]);
 
-        // Text-to-speech for bot responses
         if (isSpeechEnabled) {
           const speech = new SpeechSynthesisUtterance(data.reply);
-          speech.rate = 0.9; // Slightly slower for better clarity
+          speech.rate = 0.9;
           speech.pitch = 1;
           window.speechSynthesis.speak(speech);
         }
@@ -118,9 +122,15 @@ export const ChatInterface = () => {
       console.error('Error in chat:', error);
       toast({
         title: "Error",
-        description: "Failed to get response. Please try again.",
+        description: error.message || "Failed to get response. Please try again.",
         variant: "destructive",
       });
+
+      // Add error recovery message
+      setMessages((prev) => [...prev, {
+        text: "I apologize, but I'm having trouble connecting to my backend service. Please try again in a moment.",
+        isBot: true
+      }]);
     } finally {
       setIsLoading(false);
     }
