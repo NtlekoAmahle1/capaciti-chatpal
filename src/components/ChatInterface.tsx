@@ -86,13 +86,23 @@ export const ChatInterface = () => {
       setMessages((prev) => [...prev, { text: message, isBot: false }]);
       setIsLoading(true);
 
-      // Add debug logging
-      console.log("Sending message to Supabase function:", message);
+      // Format conversation history
+      const conversationHistory = messages.map(msg => ({
+        role: msg.isBot ? "assistant" : "user",
+        content: msg.text
+      }));
 
-      // Send message to Supabase function with explicit timeout
+      // Add current message to history
+      const fullConversation = [
+        ...conversationHistory,
+        { role: "user", content: message }
+      ];
+
+      console.log("Sending conversation to Supabase function:", fullConversation);
+
       const { data, error } = await Promise.race([
         supabase.functions.invoke('chat', {
-          body: { message },
+          body: { messages: fullConversation },
         }),
         new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Request timeout')), 10000)
@@ -126,7 +136,6 @@ export const ChatInterface = () => {
         variant: "destructive",
       });
 
-      // Add error recovery message
       setMessages((prev) => [...prev, {
         text: "I apologize, but I'm having trouble connecting to my backend service. Please try again in a moment.",
         isBot: true
