@@ -39,12 +39,14 @@ Programs:
 Be friendly but professional, and provide specific, accurate details about programs when asked.`
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    if (!Deno.env.get('OPENAI_API_KEY')) {
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openAIApiKey) {
       throw new Error('OPENAI_API_KEY is not set');
     }
 
@@ -54,40 +56,45 @@ serve(async (req) => {
       throw new Error('Invalid messages format');
     }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4', // Fixed model name
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          ...messages
-        ],
-        temperature: 0.7,
-        max_tokens: 500,
-      }),
-    })
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            ...messages
+          ],
+          temperature: 0.7,
+          max_tokens: 500,
+        }),
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('OpenAI API error:', error);
-      throw new Error(error.error?.message || 'OpenAI API call failed');
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('OpenAI API error:', errorData);
+        throw new Error(errorData.error?.message || 'OpenAI API call failed');
+      }
+
+      const data = await response.json();
+      const reply = data.choices[0].message.content;
+
+      return new Response(
+        JSON.stringify({ reply }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      );
+    } catch (fetchError) {
+      console.error('Fetch error:', fetchError);
+      throw new Error(`OpenAI API request failed: ${fetchError.message}`);
     }
-
-    const data = await response.json()
-    const reply = data.choices[0].message.content
-
-    return new Response(
-      JSON.stringify({ reply }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
-    )
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error in edge function:', error);
     return new Response(
       JSON.stringify({ 
         error: error.message,
@@ -97,6 +104,6 @@ serve(async (req) => {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       },
-    )
+    );
   }
-})
+});
